@@ -1,6 +1,6 @@
 package com.cris959.local_typesafe_evaluator.model;
 
-public enum Categoria {
+public enum CategoriaMensaje {
     SOPORTE_TECNICO,
     FACTURACION,
     CONSULTA_GENERAL,

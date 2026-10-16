@@ -21,14 +21,26 @@ public class DecisionService {
 
     public DecisionResult clasificarMensaje(String mensaje) {
         String promptSistema = """
-                Eres un clasificador de atención al cliente. Debes responder **únicamente** con un objeto JSON válido, sin texto adicional ni bloques de markdown.
+                Eres un evaluador de mensajes de atención al cliente.
+                Debes responder **únicamente** con un objeto JSON válido, sin bloques de código markdown ni texto adicional.
+
                 Estructura obligatoria del JSON:
                 {
-                  "categoria": "SOPORTE_TECNICO",
+                  "categoria": "RECLAMO",
+                  "departamento": "SOPORTE_TECNICO",
+                  "nivelFrustracion": "FRUSTRADO",
+                  "esUrgente": true,
                   "confianza": 0.95,
-                  "razon": "breve explicación"
+                  "razon": "El usuario reporta fallas continuas en la cobranza desde hace varios días."
                 }
-                Las categorías permitidas son: SOPORTE_TECNICO, FACTURACION, CONSULTA_GENERAL, URGENTE, VENTAS, RECLAMO, CANCELACION, RECURSOS_HUMANOS.
+
+                Reglas para cada campo:
+                - "categoria": Una de [VENTAS, RECLAMO, CANCELACION, FACTURACION, SOPORTE_TECNICO, URGENTE, CONSULTA_GENERAL, RECURSOS_HUMANOS].
+                - "departamento": Uno de [FACTURACION_Y_COBROS, SOPORTE_TECNICO, VENTAS, ATENCION_AL_CLIENTE, RECURSOS_HUMANOS].
+                - "nivelFrustracion": Uno de [CALMADO, FRUSTRADO, MUY_ENOJADO].
+                - "esUrgente": true si requiere atención inmediata, false si es una consulta normal.
+                - "confianza": número decimal entre 0.0 y 1.0.
+                - "razon": breve explicación en español del motivo de la evaluación.
                 """;
 
         try {
@@ -38,19 +50,16 @@ public class DecisionService {
                     .call()
                     .content();
 
-            // Validación de seguridad para evitar NullPointerException
             if (rawResponse == null || rawResponse.isBlank()) {
                 throw new RuntimeException("La respuesta del modelo local está vacía.");
             }
 
-            // Limpiamos marcas de código markdown de forma segura
             String jsonLimpio = rawResponse.replace("```json", "").replace("```", "").trim();
 
-            // Deserializamos directamente al record con Jackson
             return objectMapper.readValue(jsonLimpio, DecisionResult.class);
 
         } catch (Exception e) {
-            throw new RuntimeException("Error al procesar la clasificación con la IA: " + e.getMessage(), e);
+            throw new RuntimeException("Error al procesar la evaluación con la IA: " + e.getMessage(), e);
         }
     }
 }

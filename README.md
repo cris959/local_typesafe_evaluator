@@ -20,16 +20,22 @@ El proyecto sigue los principios de **Arquitectura Limpia**, separando las respo
 
 ---
 
-## 📋 Categorías Soportadas
-El clasificador evalúa los mensajes y los categoriza automáticamente en:
-* `VENTAS`
-* `RECLAMO`
-* `CANCELACION`
-* `FACTURACION`
-* `SOPORTE_TECNICO`
-* `URGENTE`
-* `CONSULTA_GENERAL`
-* `RECURSOS_HUMANOS`
+## 📋 Evaluaciones y Atributos Tipados
+
+Cada mensaje es procesado para extraer un análisis completo 100% en español:
+
+- **Categoría Principal (`categoria`)**:
+    - `VENTAS`, `RECLAMO`, `CANCELACION`, `FACTURACION`, `SOPORTE_TECNICO`, `URGENTE`, `CONSULTA_GENERAL`, `RECURSOS_HUMANOS`
+- **Departamento Asignado (`departamento`)**:
+    - `FACTURACION_Y_COBROS`, `SOPORTE_TECNICO`, `VENTAS`, `ATENCION_AL_CLIENTE`, `RECURSOS_HUMANOS`
+- **Nivel de Frustración (`nivelFrustracion`)**:
+    - `CALMADO`, `FRUSTRADO`, `MUY_ENOJADO`
+- **Nivel de Urgencia (`esUrgente`)**:
+    - `true` / `false`
+- **Confianza (`confianza`)**:
+    - Puntuación de precisión decimal (entre `0.0` y `1.0`)
+- **Justificación (`razon`)**:
+    - Explicación concisa generada por la IA sobre la decisión tomada
 
 ---
 
@@ -55,15 +61,18 @@ Clasificar Mensaje
 ° Ejemplo de uso:
 
 ````plaintext
-http://localhost:8008/decidir?mensaje=Quiero+dar+de+baja+mi+cuenta+el+mes+que+viene
+http://localhost:8008/decidir?mensaje=Llevo+3+días+sin+poder+cobrar+mis+ventas+y+nadie+me+responde
 ````
 
 ° Respuesta Esperada (**200 OK**):
 
 ````json
 {
-  "categoria": "CANCELACION",
+  "categoria": "RECLAMO",
+  "departamento": "SOPORTE_TECNICO",
+  "nivelFrustracion": "FRUSTRADO",
+  "esUrgente": true,
   "confianza": 0.95,
-  "razon": "El usuario solicita explícitamente dar de baja su cuenta."
+  "razon": "El usuario reporta fallas continuas en la cobranza desde hace varios días."
 }
 ````
