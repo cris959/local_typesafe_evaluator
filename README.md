@@ -58,7 +58,7 @@ Clasificar Mensaje
 http://localhost:8008/decidir?mensaje=Quiero+dar+de+baja+mi+cuenta+el+mes+que+viene
 ````
 
-° Respuesta Esperada (200 OK):
+° Respuesta Esperada (**200 OK**):
 
 ````json
 {
@@ -67,4 +67,3 @@ http://localhost:8008/decidir?mensaje=Quiero+dar+de+baja+mi+cuenta+el+mes+que+vi
   "razon": "El usuario solicita explícitamente dar de baja su cuenta."
 }
 ````
-
