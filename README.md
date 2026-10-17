@@ -5,11 +5,30 @@ Aplicación backend desarrollada en **Spring Boot** diseñada para clasificar de
 ## 🛠️ Tecnologías y Stack
 * **Java 21**
 * **Spring Boot** (REST API, Validation)
-* **Spring AI / Ollama** (`qwen2.5:1.5b`)
+* **Spring AI**
+° Ollama: **qwen2.5:1.5b** (Entorno local)
+° Mistral AI: **open-mistral-7b** (Entorno en la nube)
 * **Jackson** (Deserialización y mapeo JSON)
 * **Bean Validation** (`jakarta.validation`)
 
 ---
+
+## 🚀 Arquitectura y Proveedores de IA
+El proyecto implementa un enrutador inteligente (**ModelRouter**) que conmuta dinámicamente entre el entorno local y la nube según el parámetro de la petición:
+
+° Entorno Local (Ollama):
+
+° Modelo: **qwen2.5:1.5b**
+
+° Propósito: Procesamiento offline, menor latencia y consultas estándar o de respaldo.
+
+° Entorno Cloud (Mistral AI):
+
+° Modelo: **open-mistral-7b** (optimizado para mayor velocidad, estabilidad y tolerancia en cuotas de desarrollo).
+
+° Propósito: Resolución de consultas estructuradas de mayor exigencia y análisis contextual (**modo=mistral** o **modo=compleja**).
+
+___
 
 ## 🏗️ Arquitectura del Proyecto
 El proyecto sigue los principios de **Arquitectura Limpia**, separando las responsabilidades en capas claras:
@@ -49,16 +68,17 @@ server.port=8008
 spring.ai.ollama.base-url=http://localhost:11434
 spring.ai.ollama.model=qwen2.5:1.5b
 spring.ai.ollama.chat.options.temperature=0.1
+
+# 2. Configuración de Mistral AI (Cloud)
+spring.ai.mistralai.api-key=${MISTRAL_API_KEY}
+spring.ai.mistralai.chat.options.model=open-mistral-7b
+spring.ai.mistralai.chat.options.temperature=0.1
 ````
 
-## 🚀 Endpoints Principales
-Clasificar Mensaje
+## 🕹️ Endpoints de Prueba
+Puedes alternar el motor de IA directamente desde los parámetros de la petición HTTP
 
-° URL: **GET /decidir**
-
-° Parámetro: **mensaje** (Requerido, no puede estar vacío)
-
-° Ejemplo de uso:
+° Usando modelo local (Ollama):
 
 ````plaintext
 http://localhost:8008/decidir?mensaje=Llevo+3+días+sin+poder+cobrar+mis+ventas+y+nadie+me+responde
@@ -74,5 +94,23 @@ http://localhost:8008/decidir?mensaje=Llevo+3+días+sin+poder+cobrar+mis+ventas+
   "esUrgente": true,
   "confianza": 0.95,
   "razon": "El usuario reporta fallas continuas en la cobranza desde hace varios días."
+}
+````
+° Usando modelo en la nube (Mistral AI):
+
+````plaintext
+http://localhost:8008/decidir?mensaje=Llevo+3+días+sin+poder+cobrar&modo=mistral
+````
+
+° Respuesta Esperada (**200 OK**):
+
+````json
+{
+  "categoria": "FACTURACION",
+  "departamento": "FACTURACION_Y_COBROS",
+  "nivelFrustracion": "FRUSTRADO",
+  "esUrgente": true,
+  "confianza": 0.98,
+  "razon": "El cliente reporta un problema persistente en el cobro de sus facturas durante tres días consecutivos, lo que indica un impacto directo en su operación financiera y genera alta urgencia."
 }
 ````

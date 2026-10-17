@@ -1,25 +1,30 @@
 package com.cris959.local_typesafe_evaluator.service;
 
 import com.cris959.local_typesafe_evaluator.model.DecisionResult;
+import com.cris959.local_typesafe_evaluator.router.ModelRouter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.stereotype.Service;
-
 
 
 @Service
 public class DecisionService {
 
-    private final ChatClient chatClient;
+    private final ModelRouter modelRouter;
     private final ObjectMapper objectMapper;
 
-    public DecisionService(ChatClient.Builder chatClientBuilder, ObjectMapper objectMapper) {
-        // Spring AI configura automáticamente la conexión con Ollama sin rompernos la cabeza
-        this.chatClient = chatClientBuilder.build();
+    public DecisionService(ModelRouter modelRouter, ObjectMapper objectMapper) {
+        this.modelRouter = modelRouter;
         this.objectMapper = objectMapper;
     }
 
-    public DecisionResult clasificarMensaje(String mensaje) {
+
+    public DecisionResult clasificarMensaje(String mensaje, String modo) {
+        // Obtenemos el ChatModel correspondiente (Ollama o Groq) mediante el Router
+        ChatModel chatModel = modelRouter.route(modo);
+        ChatClient chatClient = ChatClient.create(chatModel);
+
         String promptSistema = """
                 Eres un evaluador de mensajes de atención al cliente.
                 Debes responder **únicamente** con un objeto JSON válido, sin bloques de código markdown ni texto adicional.
@@ -51,7 +56,7 @@ public class DecisionService {
                     .content();
 
             if (rawResponse == null || rawResponse.isBlank()) {
-                throw new RuntimeException("La respuesta del modelo local está vacía.");
+                throw new RuntimeException("La respuesta del modelo de IA está vacía.");
             }
 
             String jsonLimpio = rawResponse.replace("```json", "").replace("```", "").trim();
@@ -61,5 +66,10 @@ public class DecisionService {
         } catch (Exception e) {
             throw new RuntimeException("Error al procesar la evaluación con la IA: " + e.getMessage(), e);
         }
+    }
+
+    // Sobrecarga por defecto para mantener compatibilidad usando el modo "local"
+    public DecisionResult clasificarMensaje(String mensaje) {
+        return clasificarMensaje(mensaje, "local");
     }
 }
