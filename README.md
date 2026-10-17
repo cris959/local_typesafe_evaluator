@@ -5,8 +5,8 @@ Aplicación backend desarrollada en **Spring Boot** diseñada para clasificar de
 ## 🛠️ Tecnologías y Stack
 * **Java 21**
 * **Spring Boot** (REST API, Validation)
-* **Spring AI**
-° Ollama: **qwen2.5:1.5b** (Entorno local)
+* **Spring AI**   
+° Ollama: **qwen2.5:1.5b** (Entorno local)   
 ° Mistral AI: **open-mistral-7b** (Entorno en la nube)
 * **Jackson** (Deserialización y mapeo JSON)
 * **Bean Validation** (`jakarta.validation`)
