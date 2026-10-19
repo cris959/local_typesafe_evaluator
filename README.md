@@ -136,27 +136,27 @@ El enrutamiento se gestiona a través del enum **ModelTier** y soporta tres nive
 
 ### 📊 Diagrama
 
-````mermaid
+```mermaid
 flowchart TD
-    A[Cliente / HTTP GET /decidir] --> B[DecisionController]
-    B --> C[DecisionService]
-    C --> D[ModelRouter]
+    A["Cliente / HTTP GET /decidir"] --> B["DecisionController"]
+    B --> C["DecisionService"]
+    C --> D["ModelRouter"]
 
-    subgraph Evaluador de Enrutamiento
-        D --> E[Openai Evaluador - openai/gpt-oss-20b]
-        E --> F{Determinar ModelTier}
+    subgraph S1["Evaluador de Enrutamiento"]
+        D --> E["OpenAI Evaluador - openai/gpt-oss-20b"]
+        E --> F{"Determinar ModelTier"}
     end
 
-    F -- LOCAL --> G[Ollama: qwen2.5:1.5b]
-    F -- MISTRAL --> H[Mistral AI: open-mistral-7b]
-    F -- OPENAI --> I[Openai: openai/gpt-oss-20b]
+    F -- "LOCAL" --> G["Ollama: qwen2.5:1.5b"]
+    F -- "MISTRAL" --> H["Mistral AI: open-mistral-7b"]
+    F -- "OPENAI" --> I["OpenAI: openai/gpt-oss-20b"]
 
-    G --> J[DecisionResult - JSON Tipado]
+    G --> J["DecisionResult - JSON Tipado"]
     H --> J
     I --> J
 
-    J --> K[Respuesta al Cliente]
-````
+    J --> K["Respuesta al Cliente"]
+```
 ### Ejemplos de Uso y Pruebas del API
 Puedes probar el endpoint de enrutamiento inteligente utilizando los siguientes casos de prueba, que demuestran cómo el sistema evalúa la complejidad y la urgencia para derivar la consulta al modelo adecuado (**LOCAL**, **MISTRAL** o **OPENAI**), retornando un JSON tipado estructurado:
 
