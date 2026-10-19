@@ -22,8 +22,7 @@ public class DecisionController {
     public DecisionResult clasificarMensaje(
             @RequestParam
             @NotBlank(message = "El parámetro 'mensaje' no puede estar vacío ni contener solo espacios.")
-            String mensaje,
-            @RequestParam(required = false, defaultValue = "local") String modo) {
-        return decisionService.clasificarMensaje(mensaje, modo);
+            String mensaje) {
+        return decisionService.clasificarMensaje(mensaje);
     }
 }

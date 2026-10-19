@@ -114,3 +114,100 @@ http://localhost:8008/decidir?mensaje=Llevo+3+días+sin+poder+cobrar&modo=mistra
   "razon": "El cliente reporta un problema persistente en el cobro de sus facturas durante tres días consecutivos, lo que indica un impacto directo en su operación financiera y genera alta urgencia."
 }
 ````
+
+## 🚀 Enrutamiento Dinámico e Inteligente de Modelos (Model Router)
+El proyecto implementa un sistema de enrutamiento automático de LLMs capaz de evaluar la complejidad del mensaje entrante y derivar la consulta al modelo más adecuado de forma 100% transparente, optimizando tanto los tiempos de respuesta como el consumo de recursos.
+
+### 🛠️ Arquitectura de Modelos (Tiers)
+El enrutamiento se gestiona a través del enum **ModelTier** y soporta tres niveles de procesamiento:
+
+1. **LOCAL** (**qwen2.5:1.5b** via Ollama): Destinado a consultas sencillas, saludos, interacciones rápidas o procesamiento local sin costo de red.
+
+2. **MISTRAL** (**open-mistral-7b** via Mistral AI): Diseñado para análisis técnicos estructurados, explicaciones paso a paso, diseño de bases de datos y tareas conceptuales intermedias.
+
+3. **OPENAI** (**openai/gpt-oss-20b** via Openai): Utilizado para reclamos urgentes, errores críticos de sistema, situaciones de alta frustración del usuario o cuando se requiere baja latencia con máxima capacidad de razonamiento.
+
+### 💡 Puntos Clave de la Implementación
+* Evaluador Automático: Utiliza la velocidad y precisión de Groq como motor evaluador inicial para analizar el prompt y seleccionar el **ModelTier** óptimo sin requerir parámetros manuales de modo en los endpoints REST.
+
+* Garantía Type-Safe: Deserialización estructurada mediante Jackson mapeada directamente a los DTOs/Records del dominio (**DecisionResult**), asegurando respuestas JSON válidas.
+
+* Inyección de Dependencias Calificada: Uso de **@Qualifier** para gestionar múltiples beans de **ChatModel** (**ollamaChatModel**, **mistralAiChatModel**, **openAiChatModel**) dentro del contenedor de Spring Boot.
+
+### 📊 Diagrama
+
+````mermaid
+flowchart TD
+    A[Cliente / HTTP GET /decidir] --> B[DecisionController]
+    B --> C[DecisionService]
+    C --> D[ModelRouter]
+
+    subgraph Evaluador de Enrutamiento
+        D --> E[Openai Evaluador - openai/gpt-oss-20b]
+        E --> F{Determinar ModelTier}
+    end
+
+    F -- LOCAL --> G[Ollama: qwen2.5:1.5b]
+    F -- MISTRAL --> H[Mistral AI: open-mistral-7b]
+    F -- OPENAI --> I[Openai: openai/gpt-oss-20b]
+
+    G --> J[DecisionResult - JSON Tipado]
+    H --> J
+    I --> J
+
+    J --> K[Respuesta al Cliente]
+````
+### Ejemplos de Uso y Pruebas del API
+Puedes probar el endpoint de enrutamiento inteligente utilizando los siguientes casos de prueba, que demuestran cómo el sistema evalúa la complejidad y la urgencia para derivar la consulta al modelo adecuado (**LOCAL**, **MISTRAL** o **OPENAI**), retornando un JSON tipado estructurado:
+
+1. Saludo / Interacción Básica (**LOCAL**)
+* Endpoint / URL de prueba:
+````text
+http://localhost:8008/decidir?mensaje=Hola%2C%20%C2%BFC%C3%B3mo%20est%C3%A1s%3F
+````
+* Respuesta esperada (**DecisionResult**):
+
+````json
+{
+  "categoria": "RECLAMO",
+  "departamento": "SOPORTE_TECNICO",
+  "nivelFrustracion": "FRUSTRADO",
+  "esUrgente": true,
+  "confianza": 0.95,
+  "razon": "El usuario reporta fallas continuas en la cobranza desde hace varios días."
+}
+````
+
+2. Consulta Técnica Compleja (**MISTRAL**)
+* Endpoint / URL de prueba:
+````text
+http://localhost:8008/decidir?mensaje=Expl%C3%ADcame%20paso%20a%20paso%20c%C3%B3mo%20estructurar%20una%20tabla%20de%20base%20de%20datos%20relacional%20para%20un%20sistema%20de%20comercio%20electr%C3%B3nico.
+````
+* Respuesta esperada (**DecisionResult**):
+````json
+{
+  "categoria": "CONSULTA_GENERAL",
+  "departamento": "SOPORTE_TECNICO",
+  "nivelFrustracion": "CALMADO",
+  "esUrgente": false,
+  "confianza": 0.98,
+  "razon": "El usuario solicita orientación técnica sobre diseño de bases de datos, no requiere atención inmediata ni urgencia."
+}
+````
+
+3. Reclamo Crítico y Urgente (**OPENAI**)
+* Endpoint / URL de prueba:
+````text
+http://localhost:8008/decidir?mensaje=Llevo%20tres%20d%C3%ADas%20sin%20poder%20cobrar%20mis%20facturas%20y%20el%20sistema%20falla%2C%20exijo%20una%20soluci%C3%B3n%20urgente.
+````
+* Respuesta esperada (**DecisionResult**):
+````json
+{
+  "categoria": "RECLAMO",
+  "departamento": "SOPORTE_TECNICO",
+  "nivelFrustracion": "FRUSTRADO",
+  "esUrgente": true,
+  "confianza": 0.95,
+  "razon": "El usuario reporta fallas continuas en la cobranza desde hace varios días."
+}
+````
